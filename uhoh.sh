@@ -9,6 +9,8 @@ json_escape () {
 
 message="$(hostname): $*"
 
+found=
+
 # For pushover, put a file named `.pushover-keys` containing two KEY=value
 # entries for PUSHOVER_USER and PUSHOVER_TOKEN in this folder next to the
 # real uhoh.sh file.
@@ -20,6 +22,7 @@ if [[ -f ./.pushover-keys ]]; then
     --form-string "message=${message}" \
     --form-string "title=uh oh" \
     --silent
+  found=true
 fi
 
 # For pushbullet, put a file named `.pushbullet-token` containing the token
@@ -35,4 +38,10 @@ if [[ -f ./.pushbullet-token ]]; then
     -H "Content-Type: application/json" \
     -H "Access-Token: ${token}" \
     --data-raw "${json_push}"
+  found=true
+fi
+
+if [[ -z "${found}" ]]; then
+  echo "uh oh: no backend configured!"
+  exit 1
 fi
