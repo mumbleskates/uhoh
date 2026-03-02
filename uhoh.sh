@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd $(dirname $(readlink -f "$0"))
+cd "$(dirname "$(readlink -f "$0")")"
 
 json_escape () {
     printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()),end="")'
@@ -36,5 +36,3 @@ if [[ -f ./.pushbullet-token ]]; then
     -H "Access-Token: ${token}" \
     --data-raw "${json_push}"
 fi
-
-echo "no backend tokens found!"
