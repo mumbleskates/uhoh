@@ -5,7 +5,7 @@ json_escape () {
     printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()),end="")'
 }
 
-json_message=$(json_escape "$*")
+json_message=$(json_escape "$(hostname): $*")
 json_push='{"type":"note","title":"uh oh","body":'"${json_message}"'}'
 token_location="$(dirname $(readlink -f $0))/.pushbullet-token"
 token=$(cat $token_location)
