@@ -7,7 +7,8 @@ json_escape () {
     printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()),end="")'
 }
 
-MESSAGE="$(hostname): $*"
+TITLE="uh oh : $(hostname)"
+MESSAGE="$*"
 
 FOUND=
 
@@ -44,7 +45,7 @@ if [[ -f ./.pushover-keys ]]; then
     --form-string "user=${PUSHOVER_USER}" \
     --form-string "token=${PUSHOVER_TOKEN}" \
     --form-string "message=${MESSAGE}" \
-    --form-string "title=uh oh" \
+    --form-string "title=${TITLE}" \
     --form-string "priority=${PRIORITY_NUMBER}" \
     --silent
   FOUND=true
@@ -53,9 +54,10 @@ fi
 # For pushbullet, put a file named `.pushbullet-token` containing the token
 # in this folder next to the real uhoh.sh file.
 if [[ -f ./.pushbullet-token ]]; then
-  JSON_MESSAGE=$(json_escape "${MESSAGE}")
-  JSON_PUSH='{"type":"note","title":"uh oh","body":'"${JSON_MESSAGE}"'}'
-  TOKEN=$(cat ./.pushbullet-token)
+  JSON_MESSAGE="$(json_escape "${MESSAGE}")"
+  JSON_TITLE="$(json_escape "${TITLE}")"
+  JSON_PUSH='{"type":"note","title":'"${JSON_TITLE}"',"body":'"${JSON_MESSAGE}"'}'
+  TOKEN="$(cat ./.pushbullet-token)"
 
   curl https://api.pushbullet.com/v2/pushes \
     --silent \
