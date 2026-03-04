@@ -7,41 +7,66 @@ json_escape () {
     printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()),end="")'
 }
 
-message="$(hostname): $*"
+MESSAGE="$(hostname): $*"
 
-found=
+FOUND=
 
 # For pushover, put a file named `.pushover-keys` containing two KEY=value
 # entries for PUSHOVER_USER and PUSHOVER_TOKEN in this folder next to the
 # real uhoh.sh file.
 if [[ -f ./.pushover-keys ]]; then
   source ./.pushover-keys
+
+  # pushover priorities: https://pushover.net/api#priority
+  # default to 'normal' priority
+  PRIORITY_NUMBER=0
+  # lowercase the input value
+  PRIORITY="${PRIORITY,,}"
+  case "${PRIORITY:-normal}" in
+    lowest)
+      PRIORITY_NUMBER=-2
+      ;;
+    low)
+      PRIORITY_NUMBER=-1
+      ;;
+    normal)
+      PRIORITY_NUMBER=0
+      ;;
+    high)
+      PRIORITY_NUMBER=1
+      ;;
+    emergency)
+      PRIORITY_NUMBER=2
+      ;;
+  esac
+
   curl https://api.pushover.net/1/messages.json \
     --form-string "user=${PUSHOVER_USER}" \
     --form-string "token=${PUSHOVER_TOKEN}" \
-    --form-string "message=${message}" \
+    --form-string "message=${MESSAGE}" \
     --form-string "title=uh oh" \
+    --form-string "priority=${PRIORITY_NUMBER}" \
     --silent
-  found=true
+  FOUND=true
 fi
 
 # For pushbullet, put a file named `.pushbullet-token` containing the token
 # in this folder next to the real uhoh.sh file.
 if [[ -f ./.pushbullet-token ]]; then
-  json_message=$(json_escape "${message}")
-  json_push='{"type":"note","title":"uh oh","body":'"${json_message}"'}'
-  token=$(cat ./.pushbullet-token)
+  JSON_MESSAGE=$(json_escape "${MESSAGE}")
+  JSON_PUSH='{"type":"note","title":"uh oh","body":'"${JSON_MESSAGE}"'}'
+  TOKEN=$(cat ./.pushbullet-token)
 
   curl https://api.pushbullet.com/v2/pushes \
     --silent \
     -X POST \
     -H "Content-Type: application/json" \
-    -H "Access-Token: ${token}" \
-    --data-raw "${json_push}"
-  found=true
+    -H "Access-Token: ${TOKEN}" \
+    --data-raw "${JSON_PUSH}"
+  FOUND=true
 fi
 
-if [[ -z "${found}" ]]; then
+if [[ -z "${FOUND}" ]]; then
   echo "uh oh: no backend configured!"
   exit 1
 fi
