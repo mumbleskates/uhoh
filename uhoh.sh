@@ -21,9 +21,11 @@ if [[ -f ./.pushover-keys ]]; then
   # pushover priorities: https://pushover.net/api#priority
   # default to 'normal' priority
   PRIORITY_NUMBER=0
-  # lowercase the input value
+  # default to "normal" priority
+  PRIORITY="${PRIORITY-normal}"
+  # lowercase the priority value
   PRIORITY="${PRIORITY,,}"
-  case "${PRIORITY:-normal}" in
+  case "${PRIORITY}" in
     lowest)
       PRIORITY_NUMBER=-2
       ;;
